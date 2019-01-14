@@ -1,0 +1,61 @@
+<html>
+<head>
+<title>ロゴレインボー化</title>
+<script src="https://docs.opencv.org/4.0.1/opencv.js"></script>
+<script language="JavaScript" type="text/javascript">
+function handleFiles(files) {
+    console.log(files.size);
+    const file = files[0];
+    const imageType = /image.*/;
+    
+    if (file.type.match(imageType)) {
+        // Display the given image
+        let sourceImg = document.getElementById("sourceImg");
+        sourceImg.classList.add("obj");
+        sourceImg.file = file;
+        
+        let reader = new FileReader();
+        reader.onload = (
+            function(aImg) {
+            return function(e) {
+                aImg.src = e.target.result;
+    
+                let ctx = document.getElementById("canvasInput");
+                drawImage(ctx, aImg);
+
+            };
+        })(sourceImg);
+        reader.readAsDataURL(file);    
+    }
+}
+
+function drawImage(canvas, aImg) {
+    let ctx = canvas.getContext('2d');
+    // canvas内の要素をクリアする
+    ctx.clearRect(0, 0, 500, 500);
+
+    // Canvas上に画像を表示
+    var img = new Image();
+    img.src = aImg;
+    img.onload = function() {
+        ctx.drawImage(img, 0, 0, canvasWidth, this.height * (canvasWidth / this.width));
+
+        // Get a mask
+        //const convertedImg = cv.cvtColor(img, cv2.COLOR_BGR2GRAY);
+    
+        // Combine the mask with a rainbow flag
+    }
+}
+</script>
+
+</head>
+
+<input type="file" id="input" onchange="handleFiles(this.files)" />
+<p></p>
+<img id="sourceImg" style="border: solid 1px black;" />
+<img id="destImg" style="border: solid 1px black;" />
+
+<canvas id="canvasInput" width="500" height="500" />
+<canvas id="canvasOutput" width="500" height="500" />
+
+</html>
