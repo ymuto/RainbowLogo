@@ -10,18 +10,17 @@ function handleFiles(files) {
     
     if (file.type.match(imageType)) {
         // Display the given image
-        let sourceImg = document.getElementById("sourceImg");
-        sourceImg.classList.add("obj");
-        sourceImg.file = file;
+        //let sourceImg = document.getElementById("sourceImg");
+        //sourceImg.classList.add("obj");
+        //sourceImg.file = file;
         
         let reader = new FileReader();
         reader.onload = (
             function(aImg) {
             return function(e) {
                 aImg.src = e.target.result;
-    
-                let ctx = document.getElementById("canvasInput");
-                drawImage(ctx, aImg);
+                console.log("here");
+                drawImageInCanvas();
 
             };
         })(sourceImg);
@@ -29,33 +28,41 @@ function handleFiles(files) {
     }
 }
 
-function drawImage(canvas, aImg) {
-    let ctx = canvas.getContext('2d');
-    // canvas内の要素をクリアする
-    ctx.clearRect(0, 0, 500, 500);
 
-    // Canvas上に画像を表示
+function drawImageInCanvas() {
+    let canvasInput = document.getElementById("canvasInput");
+    let canvasContext = canvasInput.getContext('2d');
+
     var img = new Image();
-    img.src = aImg;
-    img.onload = function() {
-        ctx.drawImage(img, 0, 0, canvasWidth, this.height * (canvasWidth / this.width));
+    img.src = "panasonic_640.jpg";
+    img.onload = function () {
+        canvasContext.drawImage(img, 0, 0, 200, 200);
 
-        // Get a mask
-        //const convertedImg = cv.cvtColor(img, cv2.COLOR_BGR2GRAY);
-    
-        // Combine the mask with a rainbow flag
-    }
+        let src = cv.imread("canvasInput");
+        let dst = new cv.Mat();
+        cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
+        cv.imshow('canvasOutput', dst);
+        src.delete();
+        dst.delete();
+    };
 }
 </script>
 
 </head>
+<body>
+    
 
 <input type="file" id="input" onchange="handleFiles(this.files)" />
-<p></p>
-<img id="sourceImg" style="border: solid 1px black;" />
-<img id="destImg" style="border: solid 1px black;" />
 
-<canvas id="canvasInput" width="500" height="500" />
-<canvas id="canvasOutput" width="500" height="500" />
+<p>sourceImg</p>
+<img id="sourceImg" width="200" height="200" style="border: solid 1px black;" />
 
+<p>CanvasInput</p>
+<canvas id="canvasInput" width="200" height="200" style="border: solid 1px red;"></canvas>
+
+<p>CanvasOutput</p>
+<canvas id="canvasOutput" width="200" height="200" style="border: solid 1px red;"></canvas>
+
+
+</body>
 </html>
