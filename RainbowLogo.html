@@ -5,45 +5,64 @@
 <script language="JavaScript" type="text/javascript">
 function handleFiles(files) {
     console.log(files.size);
-    const file = files[0];
-    const imageType = /image.*/;
-    
-    if (file.type.match(imageType)) {
-        // Display the given image
-        //let sourceImg = document.getElementById("sourceImg");
-        //sourceImg.classList.add("obj");
-        //sourceImg.file = file;
-        
-        let reader = new FileReader();
-        reader.onload = (
-            function(aImg) {
-            return function(e) {
-                aImg.src = e.target.result;
-                console.log("here");
-                drawImageInCanvas();
-
-            };
-        })(sourceImg);
-        reader.readAsDataURL(file);    
-    }
+    const file = files[0];       
+    let reader = new FileReader();
+    reader.onload = function (){
+        drawImageInCanvas(reader.result);
+    };
+    reader.readAsDataURL(file);    
 }
 
 
-function drawImageInCanvas() {
-    let canvasInput = document.getElementById("canvasInput");
-    let canvasContext = canvasInput.getContext('2d');
+function drawImageInCanvas(file) {
 
-    var img = new Image();
-    img.src = "panasonic_640.jpg";
+    let img = new Image();
+    img.src = file;
     img.onload = function () {
+        // draw the given image to canvas input
+        let canvasInput = document.getElementById("canvasInput");
+        let canvasContext = canvasInput.getContext('2d');
         canvasContext.drawImage(img, 0, 0, 200, 200);
 
         let src = cv.imread("canvasInput");
-        let dst = new cv.Mat();
-        cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-        cv.imshow('canvasOutput', dst);
-        src.delete();
-        dst.delete();
+
+        // make it gray-scaled
+        let grayScaledImg = new cv.Mat();
+        cv.cvtColor(src, grayScaledImg, cv.COLOR_RGBA2GRAY, 0);
+        cv.imshow('canvasGrayScaled', grayScaledImg);
+
+        // make it binary
+        // TODO: use THRESH_OTSU
+        let maskImg = new cv.Mat();
+        cv.threshold(grayScaledImg, maskImg, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU);
+        cv.imshow('canvasMask', maskImg);
+
+        // TODO: rather than just inverse the binary image, we should use findContours
+
+        // load texure
+        let textureImg = new Image();
+        textureImg.src = 'rainbowFlag.png';
+        textureImg.onload = function () {
+            // draw the rainbow flag image to canvas input
+            let canvasTexture = document.getElementById("canvasTexture");
+            let contextTexture = canvasTexture.getContext('2d');
+            contextTexture.drawImage(textureImg, 0, 0, 200, 200);
+
+            let textureMat = cv.imread("canvasTexture");
+
+            // apply mask
+            let outputImg = new cv.Mat();
+            textureMat.copyTo(outputImg, maskImg);
+            cv.imshow('canvasOutput', outputImg);
+
+            // clean up
+            src.delete();
+            grayScaledImg.delete();
+            maskImg.delete();
+            textureMat.delete();
+            outputImg.delete();
+        };
+
     };
 }
 </script>
@@ -51,18 +70,22 @@ function drawImageInCanvas() {
 </head>
 <body>
     
-
-<input type="file" id="input" onchange="handleFiles(this.files)" />
-
-<p>sourceImg</p>
-<img id="sourceImg" width="200" height="200" style="border: solid 1px black;" />
+<input type="file" id="input" accept="image/*" onchange="handleFiles(this.files)" />
 
 <p>CanvasInput</p>
 <canvas id="canvasInput" width="200" height="200" style="border: solid 1px red;"></canvas>
 
+<p>CanvasGrayScaled</p>
+<canvas id="canvasGrayScaled" width="200" height="200" style="border: solid 1px red;"></canvas>
+
+<p>CanvasMask</p>
+<canvas id="canvasMask" width="200" height="200" style="border: solid 1px red;"></canvas>
+
+<p>CanvasTexture</p>
+<canvas id="canvasTexture" width="200" height="200" style="border: solid 1px red;"></canvas>
+
 <p>CanvasOutput</p>
 <canvas id="canvasOutput" width="200" height="200" style="border: solid 1px red;"></canvas>
-
 
 </body>
 </html>
